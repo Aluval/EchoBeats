@@ -1,80 +1,64 @@
-
-
-
 import os
 import numpy as np
 from pydub import AudioSegment
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from pyrogram.errors import BadRequest
+import subprocess as sp
 
 # Initialize the bot with your credentials
 api_id = '10811400'
 api_hash = '191bf5ae7a6c39771e7b13cf4ffd1279'
 bot_token = '7412278588:AAFKWhBga4p9sqXT9OcaYt41nQz14IVmQyA'
 
+app = Client("slowreverb_bot", api_id=api_id, api_hash=api_hash, bot_token=bot_token)
 
-app = Client("8d_music_bot", api_id=api_id, api_hash=api_hash, bot_token=bot_token)
+def apply_slowreverb(audio_path, output_path, room_size=0.75, damping=0.5, wet_level=0.08, dry_level=0.2, slowfactor=0.08):
+    # Convert to WAV if needed
+    if not audio_path.lower().endswith('.wav'):
+        tmp_wav = "tmp.wav"
+        sp.call(f'ffmpeg -hide_banner -loglevel error -y -i "{audio_path}" "{tmp_wav}"', shell=True)
+        audio_path = tmp_wav
 
-def apply_8d_effect(audio_path, output_path, pan_speed=0.1, rotation_duration=10):
     # Load the audio file
-    audio = AudioSegment.from_file(audio_path)
+    audio = AudioSegment.from_wav(audio_path)
     audio = audio.set_channels(2)  # Ensure the audio is stereo
-    
-    # Parameters
-    frame_rate = audio.frame_rate
-    duration_ms = len(audio)
-    sample_rate = frame_rate / 1000.0
-    frames = np.array(audio.get_array_of_samples())
 
-    # Prepare for panning
-    num_samples = len(frames)
-    num_frames = int(sample_rate * rotation_duration)
-    
-    left_channel = np.zeros(num_samples, dtype=np.int16)
-    right_channel = np.zeros(num_samples, dtype=np.int16)
+    # Slow down the audio
+    slowed_audio = audio._spawn(audio.raw_data, overrides={
+        "frame_rate": int(audio.frame_rate * (1 - slowfactor))
+    })
+    slowed_audio = slowed_audio.set_frame_rate(audio.frame_rate)
 
-    # Apply panning effect
-    for i in range(num_samples):
-        pan = np.sin(2 * np.pi * i / num_frames)  # Generate a panning wave
-        left_val = frames[i] * (1 - pan)
-        right_val = frames[i] * pan
+    # Export to temporary file
+    temp_file = "temp_reverb.wav"
+    slowed_audio.export(temp_file, format="wav")
 
-        # Ensure values are within valid int16 range
-        left_channel[i] = np.clip(left_val, -32768, 32767)
-        right_channel[i] = np.clip(right_val, -32768, 32767)
-
-    # Create new audio segments for left and right channels
-    left_audio = AudioSegment(
-        data=left_channel.tobytes(),
-        sample_width=audio.sample_width,
-        frame_rate=frame_rate,
-        channels=1
+    # Apply reverb using ffmpeg
+    reverb_command = (
+        f'ffmpeg -hide_banner -loglevel error -y -i "{temp_file}" '
+        f'-af "aecho=0.8:0.88:60:0.4" "{output_path}"'
     )
+    sp.call(reverb_command, shell=True)
 
-    right_audio = AudioSegment(
-        data=right_channel.tobytes(),
-        sample_width=audio.sample_width,
-        frame_rate=frame_rate,
-        channels=1
-    )
+    # Cleanup temporary files
+    os.remove(temp_file)
+    if audio_path == "tmp.wav":
+        os.remove(audio_path)
 
-    stereo_audio = AudioSegment.from_mono_audiosegments(left_audio, right_audio)
-    stereo_audio.export(output_path, format="flac")
-
-@app.on_message(filters.command("8dconvert") & filters.private)
-async def convert_to_8d(client: Client, message: Message):
+@app.on_message(filters.command("slowreverb") & filters.private)
+async def slow_reverb_handler(client: Client, message: Message):
     if not message.reply_to_message or not message.reply_to_message.audio:
-        await message.reply_text("Please reply to an audio file with the /8dconvert command.")
+        await message.reply_text("Please reply to an audio file with the /slowreverb command.")
         return
 
     audio = message.reply_to_message.audio
     file_path = await client.download_media(audio)
 
     input_file = file_path
-    output_file = f"{os.path.splitext(file_path)[0]}_8d.flac"
+    output_file = f"{os.path.splitext(file_path)[0]}_slowreverb.wav"
 
-    apply_8d_effect(input_file, output_file)
+    apply_slowreverb(input_file, output_file)
 
     try:
         await message.reply_audio(audio=output_file)
