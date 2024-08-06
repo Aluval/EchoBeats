@@ -132,6 +132,9 @@ async def slow_reverb_handler(client: Client, message: Message):
     os.remove(final_output)
 
 
+
+
+
 def apply_lofi_effect(audio_path, output_path):
     # Convert to WAV if needed
     if not audio_path.lower().endswith('.wav'):
@@ -169,9 +172,9 @@ async def lofi_handler(client: Client, message: Message):
     # Apply the lofi effect
     apply_lofi_effect(input_file, output_file)
     
-    # Convert the output to FLAC with 24-bit depth and 48kHz sample rate
+    # Convert the output to FLAC with 24-bit depth and 48kHz sample rate, and add metadata
     final_output = f"{os.path.splitext(file_path)[0]}_lofi_24bit_48kHz.flac"
-    subprocess.call(f'ffmpeg -hide_banner -loglevel error -y -i "{output_file}" -sample_fmt s32 -ar 48000 "{final_output}"', shell=True)
+    subprocess.call(f'ffmpeg -hide_banner -loglevel error -y -i "{output_file}" -sample_fmt s32 -ar 48000 -metadata comment="{metadata["comment"]}" -metadata created_by="{metadata["created_by"]}" -metadata title="{metadata["title"]}" "{final_output}"', shell=True)
     
     try:
         await message.reply_audio(audio=final_output)
@@ -220,9 +223,9 @@ async def eight_d_handler(client: Client, message: Message):
     # Apply the 8D effect
     apply_8d_effect(input_file, output_file)
     
-    # Convert the output to FLAC with 24-bit depth and 48kHz sample rate
+    # Convert the output to FLAC with 24-bit depth and 48kHz sample rate, and add metadata
     final_output = f"{os.path.splitext(file_path)[0]}_8d_24bit_48kHz.flac"
-    subprocess.call(f'ffmpeg -hide_banner -loglevel error -y -i "{output_file}" -sample_fmt s32 -ar 48000 "{final_output}"', shell=True)
+    subprocess.call(f'ffmpeg -hide_banner -loglevel error -y -i "{output_file}" -sample_fmt s32 -ar 48000 -metadata comment="{metadata["comment"]}" -metadata created_by="{metadata["created_by"]}" -metadata title="{metadata["title"]}" "{final_output}"', shell=True)
     
     try:
         await message.reply_audio(audio=final_output)
