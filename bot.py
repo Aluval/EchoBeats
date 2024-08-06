@@ -4,7 +4,7 @@ from pydub import AudioSegment
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from pyrogram.errors import BadRequest
-import subprocess as sp
+import subprocess 
 
 # Initialize the bot with your credentials
 api_id = '10811400'
