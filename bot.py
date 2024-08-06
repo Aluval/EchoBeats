@@ -152,7 +152,7 @@ def apply_lofi_effect(audio_path, output_path):
     if audio_path == "tmp.wav":
         os.remove(audio_path)
 
-@Client.on_message(filters.command("lofi") & filters.private)
+@app.on_message(filters.command("lofi") & filters.private)
 async def lofi_handler(client: Client, message: Message):
     if not message.reply_to_message or not message.reply_to_message.audio:
         await message.reply_text("Please reply to an audio file with the /lofi command.")
@@ -203,7 +203,7 @@ def apply_8d_effect(audio_path, output_path):
     if audio_path == "tmp.wav":
         os.remove(audio_path)
 
-@Client.on_message(filters.command("8d") & filters.private)
+@app.on_message(filters.command("8d") & filters.private)
 async def eight_d_handler(client: Client, message: Message):
     if not message.reply_to_message or not message.reply_to_message.audio:
         await message.reply_text("Please reply to an audio file with the /8d command.")
