@@ -13,6 +13,12 @@ bot_token = '7412278588:AAFKWhBga4p9sqXT9OcaYt41nQz14IVmQyA'
 
 app = Client("slowreverb_bot", api_id=api_id, api_hash=api_hash, bot_token=bot_token)
 
+metadata = {
+    "comment": "Created by Slow + Reverb Bot",
+    "created_by": "Slow + Reverb Bot",
+    "title": "Audio with Slow Reverb"
+}
+
 def apply_slowreverb(audio_path, output_path, room_size=0.75, damping=0.5, wet_level=0.08, dry_level=0.2, slowfactor=0.08):
     # Convert to WAV if needed
     if not audio_path.lower().endswith('.wav'):
@@ -52,21 +58,58 @@ async def slow_reverb_handler(client: Client, message: Message):
         await message.reply_text("Please reply to an audio file with the /slowreverb command.")
         return
 
+    # Inform user about processing time
+    await message.reply_text("Processing your request. Please wait for 2 to 4 minutes.")
+
     audio = message.reply_to_message.audio
     file_path = await client.download_media(audio)
 
     input_file = file_path
     output_file = f"{os.path.splitext(file_path)[0]}_slowreverb.wav"
 
+    # Apply the slow reverb effect
     apply_slowreverb(input_file, output_file)
 
+    # Convert the output to FLAC with 24-bit depth and 48kHz sample rate
+    final_output = f"{os.path.splitext(file_path)[0]}_slowreverb_24bit_48kHz.flac"
+    sp.call(f'ffmpeg -hide_banner -loglevel error -y -i "{output_file}" -sample_fmt s32 -ar 48000 "{final_output}"', shell=True)
+    
+    # Add metadata to the final FLAC file
+    metadata_command = (
+        f'ffmpeg -hide_banner -loglevel error -y -i "{final_output}" '
+        f'-metadata comment="{metadata["comment"]}" '
+        f'-metadata created_by="{metadata["created_by"]}" '
+        f'-metadata title="{metadata["title"]}" '
+        f'"{final_output}"'
+    )
+    sp.call(metadata_command, shell=True)
+
+    # Cleanup intermediate files
+    os.remove(file_path)
+    os.remove(output_file)
+
     try:
-        await message.reply_audio(audio=output_file)
+        await message.reply_audio(audio=final_output)
     except BadRequest as e:
         await message.reply_text(f"Failed to send audio: {e}")
 
-    os.remove(file_path)
-    os.remove(output_file)
+    os.remove(final_output)
+
+@app.on_message(filters.command("setmetadata") & filters.private)
+async def set_metadata_handler(client: Client, message: Message):
+    global metadata
+    if len(message.command) < 4:
+        await message.reply_text("Usage: /setmetadata <comment> <created_by> <title>")
+        return
+
+    comment = message.command[1]
+    created_by = message.command[2]
+    title = message.command[3]
+    metadata["comment"] = comment
+    metadata["created_by"] = created_by
+    metadata["title"] = title
+
+    await message.reply_text(f"Metadata updated:\nComment: {comment}\nCreated by: {created_by}\nTitle: {title}")
 
 if __name__ == "__main__":
     app.run()
