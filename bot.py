@@ -13,12 +13,48 @@ bot_token = '7412278588:AAFKWhBga4p9sqXT9OcaYt41nQz14IVmQyA'
 
 app = Client("slowreverb_bot", api_id=api_id, api_hash=api_hash, bot_token=bot_token)
 
+
 # Initialize the metadata dictionary
 metadata = {
     "comment": "Default comment",
     "created_by": "Default creator",
     "title": "Default title"
 }
+
+@app.on_message(filters.command("setmetadata") & filters.private)
+async def set_metadata_command(client, msg):
+    # Extract metadata from the command message
+    if len(msg.command) < 2:
+        await msg.reply_text("Invalid command format. Use: /setmetadata comment | created_by | title")
+        return
+    
+    parts = msg.text.split(" ", 1)[1].split(" | ")
+    if len(parts) != 3:
+        await msg.reply_text("Invalid number of metadata parts. Use: /setmetadata comment | created_by | title")
+        return
+    
+    # Store the metadata locally
+    metadata["comment"] = parts[0].strip()
+    metadata["created_by"] = parts[1].strip()
+    metadata["title"] = parts[2].strip()
+    
+    await msg.reply_text("Metadata set successfully ✅.")
+
+def change_audio_metadata(input_path, output_path, comment, created_by, audio_title):
+    command = [
+        'ffmpeg',
+        '-i', input_path,
+        '-metadata', f'comment={comment}',
+        '-metadata', f'artist={created_by}',
+        '-metadata', f'title={audio_title}',
+        '-c', 'copy',
+        output_path,
+        '-y'
+    ]
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = process.communicate()
+    if process.returncode != 0:
+        raise Exception(f"FFmpeg error: {stderr.decode('utf-8')}")
 
 def apply_slowreverb(audio_path, output_path, room_size=0.75, damping=0.5, wet_level=0.08, dry_level=0.2, slowfactor=0.08):
     # Convert to WAV if needed
@@ -53,32 +89,6 @@ def apply_slowreverb(audio_path, output_path, room_size=0.75, damping=0.5, wet_l
     if audio_path == "tmp.wav":
         os.remove(audio_path)
 
-@app.on_message(filters.command("setmetadata") & filters.private)
-async def set_metadata_handler(client: Client, message: Message):
-    global metadata
-    # Extract metadata from the command
-    parts = message.text.split('|')
-    
-    if len(parts) < 3:
-        await message.reply_text("Usage: /setmetadata <comment> | <created_by> | <title>")
-        return
-    
-    comment = parts[0].strip()
-    created_by = parts[1].strip()
-    title = parts[2].strip()
-
-    # Update the metadata dictionary
-    metadata["comment"] = comment
-    metadata["created_by"] = created_by
-    metadata["title"] = title
-
-    await message.reply_text(
-        f"Metadata updated:\n"
-        f"Comment: {comment}\n"
-        f"Created by: {created_by}\n"
-        f"Title: {title}"
-    )
-
 @app.on_message(filters.command("slowreverb") & filters.private)
 async def slow_reverb_handler(client: Client, message: Message):
     if not message.reply_to_message or not message.reply_to_message.audio:
@@ -101,14 +111,7 @@ async def slow_reverb_handler(client: Client, message: Message):
     sp.call(f'ffmpeg -hide_banner -loglevel error -y -i "{output_file}" -sample_fmt s32 -ar 48000 "{final_output}"', shell=True)
 
     # Add metadata to the final FLAC file
-    metadata_command = (
-        f'ffmpeg -hide_banner -loglevel error -y -i "{final_output}" '
-        f'-metadata comment="{metadata["comment"]}" '
-        f'-metadata created_by="{metadata["created_by"]}" '
-        f'-metadata title="{metadata["title"]}" '
-        f'"{final_output}"'
-    )
-    sp.call(metadata_command, shell=True)
+    change_audio_metadata(final_output, final_output, metadata["comment"], metadata["created_by"], metadata["title"])
 
     # Cleanup intermediate files
     os.remove(file_path)
@@ -120,8 +123,6 @@ async def slow_reverb_handler(client: Client, message: Message):
         await message.reply_text(f"Failed to send audio: {e}")
     
     os.remove(final_output)
-
-
 
     
 if __name__ == "__main__":
