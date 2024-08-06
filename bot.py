@@ -60,7 +60,7 @@ def apply_slowreverb(audio_path, output_path, room_size=0.75, damping=0.5, wet_l
     # Convert to WAV if needed
     if not audio_path.lower().endswith('.wav'):
         tmp_wav = "tmp.wav"
-        sp.call(f'ffmpeg -hide_banner -loglevel error -y -i "{audio_path}" "{tmp_wav}"', shell=True)
+        subprocess.call(f'ffmpeg -hide_banner -loglevel error -y -i "{audio_path}" "{tmp_wav}"', shell=True)
         audio_path = tmp_wav
     
     # Load the audio file
@@ -82,7 +82,7 @@ def apply_slowreverb(audio_path, output_path, room_size=0.75, damping=0.5, wet_l
         f'ffmpeg -hide_banner -loglevel error -y -i "{temp_file}" '
         f'-af "aecho={wet_level}:{damping}:{room_size}:{dry_level}" "{output_path}"'
     )
-    sp.call(reverb_command, shell=True)
+    subprocess.call(reverb_command, shell=True)
 
     # Cleanup temporary files
     os.remove(temp_file)
@@ -108,7 +108,7 @@ async def slow_reverb_handler(client: Client, message: Message):
 
     # Convert the output to FLAC with 24-bit depth and 48kHz sample rate
     final_output = f"{os.path.splitext(file_path)[0]}_slowreverb_24bit_48kHz.flac"
-    sp.call(f'ffmpeg -hide_banner -loglevel error -y -i "{output_file}" -sample_fmt s32 -ar 48000 "{final_output}"', shell=True)
+    subprocess.call(f'ffmpeg -hide_banner -loglevel error -y -i "{output_file}" -sample_fmt s32 -ar 48000 "{final_output}"', shell=True)
 
     # Add metadata to the final FLAC file
     change_audio_metadata(final_output, final_output, metadata["comment"], metadata["created_by"], metadata["title"])
