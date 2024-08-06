@@ -130,6 +130,109 @@ async def slow_reverb_handler(client: Client, message: Message):
         await message.reply_text(f"Failed to send audio: {e}")
     
     os.remove(final_output)
+
+
+def apply_lofi_effect(audio_path, output_path):
+    # Convert to WAV if needed
+    if not audio_path.lower().endswith('.wav'):
+        tmp_wav = "tmp.wav"
+        subprocess.call(f'ffmpeg -hide_banner -loglevel error -y -i "{audio_path}" "{tmp_wav}"', shell=True)
+        audio_path = tmp_wav
+
+    # Load the audio file
+    audio = AudioSegment.from_wav(audio_path)
+    
+    # Apply lofi effect by lowering the sample rate and adding a lowpass filter
+    lofi_audio = audio.set_frame_rate(22050).low_pass_filter(1000)
+    
+    # Export to output file
+    lofi_audio.export(output_path, format="wav")
+    
+    # Cleanup temporary file
+    if audio_path == "tmp.wav":
+        os.remove(audio_path)
+
+@Client.on_message(filters.command("lofi") & filters.private)
+async def lofi_handler(client: Client, message: Message):
+    if not message.reply_to_message or not message.reply_to_message.audio:
+        await message.reply_text("Please reply to an audio file with the /lofi command.")
+        return
+    
+    # Inform user about processing time
+    await message.reply_text("Processing your request. Please wait for 2 to 4 minutes.")
+    
+    audio = message.reply_to_message.audio
+    file_path = await client.download_media(audio)
+    input_file = file_path
+    output_file = f"{os.path.splitext(file_path)[0]}_lofi.wav"
+    
+    # Apply the lofi effect
+    apply_lofi_effect(input_file, output_file)
+    
+    # Convert the output to FLAC with 24-bit depth and 48kHz sample rate
+    final_output = f"{os.path.splitext(file_path)[0]}_lofi_24bit_48kHz.flac"
+    subprocess.call(f'ffmpeg -hide_banner -loglevel error -y -i "{output_file}" -sample_fmt s32 -ar 48000 "{final_output}"', shell=True)
+    
+    try:
+        await message.reply_audio(audio=final_output)
+    except BadRequest as e:
+        await message.reply_text(f"Failed to send audio: {e}")
+    
+    # Cleanup intermediate files
+    os.remove(file_path)
+    os.remove(output_file)
+    os.remove(final_output)
+
+def apply_8d_effect(audio_path, output_path):
+    # Convert to WAV if needed
+    if not audio_path.lower().endswith('.wav'):
+        tmp_wav = "tmp.wav"
+        subprocess.call(f'ffmpeg -hide_banner -loglevel error -y -i "{audio_path}" "{tmp_wav}"', shell=True)
+        audio_path = tmp_wav
+
+    # Apply 8D effect using ffmpeg's aeval filter for a binaural panning effect
+    command = [
+        'ffmpeg', '-hide_banner', '-loglevel', 'error', '-y',
+        '-i', audio_path,
+        '-af', 'apulsator=hz=0.1',
+        output_path
+    ]
+    subprocess.call(command)
+    
+    # Cleanup temporary file
+    if audio_path == "tmp.wav":
+        os.remove(audio_path)
+
+@Client.on_message(filters.command("8d") & filters.private)
+async def eight_d_handler(client: Client, message: Message):
+    if not message.reply_to_message or not message.reply_to_message.audio:
+        await message.reply_text("Please reply to an audio file with the /8d command.")
+        return
+    
+    # Inform user about processing time
+    await message.reply_text("Processing your request. Please wait for 2 to 4 minutes.")
+    
+    audio = message.reply_to_message.audio
+    file_path = await client.download_media(audio)
+    input_file = file_path
+    output_file = f"{os.path.splitext(file_path)[0]}_8d.wav"
+    
+    # Apply the 8D effect
+    apply_8d_effect(input_file, output_file)
+    
+    # Convert the output to FLAC with 24-bit depth and 48kHz sample rate
+    final_output = f"{os.path.splitext(file_path)[0]}_8d_24bit_48kHz.flac"
+    subprocess.call(f'ffmpeg -hide_banner -loglevel error -y -i "{output_file}" -sample_fmt s32 -ar 48000 "{final_output}"', shell=True)
+    
+    try:
+        await message.reply_audio(audio=final_output)
+    except BadRequest as e:
+        await message.reply_text(f"Failed to send audio: {e}")
+    
+    # Cleanup intermediate files
+    os.remove(file_path)
+    os.remove(output_file)
+    os.remove(final_output)
     
 if __name__ == "__main__":
     app.run()
