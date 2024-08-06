@@ -19,6 +19,7 @@ metadata = {
     "title": "Audio with Slow Reverb"
 }
 
+
 def apply_slowreverb(audio_path, output_path, room_size=0.75, damping=0.5, wet_level=0.08, dry_level=0.2, slowfactor=0.08):
     # Convert to WAV if needed
     if not audio_path.lower().endswith('.wav'):
@@ -47,6 +48,17 @@ def apply_slowreverb(audio_path, output_path, room_size=0.75, damping=0.5, wet_l
     )
     sp.call(reverb_command, shell=True)
 
+    # Add metadata to the final file
+    if metadata:
+        metadata_command = (
+            f'ffmpeg -hide_banner -loglevel error -y -i "{output_path}" '
+            f'-metadata comment="{metadata["comment"]}" '
+            f'-metadata created_by="{metadata["created_by"]}" '
+            f'-metadata title="{metadata["title"]}" '
+            f'"{output_path}"'
+        )
+        sp.call(metadata_command, shell=True)
+
     # Cleanup temporary files
     os.remove(temp_file)
     if audio_path == "tmp.wav":
@@ -58,46 +70,27 @@ async def slow_reverb_handler(client: Client, message: Message):
         await message.reply_text("Please reply to an audio file with the /slowreverb command.")
         return
 
-    # Inform user about processing time
-    await message.reply_text("Processing your request. Please wait for 2 to 4 minutes.")
-
     audio = message.reply_to_message.audio
     file_path = await client.download_media(audio)
 
     input_file = file_path
     output_file = f"{os.path.splitext(file_path)[0]}_slowreverb.wav"
 
-    # Apply the slow reverb effect
-    apply_slowreverb(input_file, output_file)
+    try:
+        apply_slowreverb(input_file, output_file)
 
-    # Convert the output to FLAC with 24-bit depth and 48kHz sample rate
-    final_output = f"{os.path.splitext(file_path)[0]}_slowreverb_24bit_48kHz.flac"
-    sp.call(f'ffmpeg -hide_banner -loglevel error -y -i "{output_file}" -sample_fmt s32 -ar 48000 "{final_output}"', shell=True)
-    
-    # Add metadata to the final FLAC file
-    metadata_command = (
-        f'ffmpeg -hide_banner -loglevel error -y -i "{final_output}" '
-        f'-metadata comment="{metadata["comment"]}" '
-        f'-metadata created_by="{metadata["created_by"]}" '
-        f'-metadata title="{metadata["title"]}" '
-        f'"{final_output}"'
-    )
-    sp.call(metadata_command, shell=True)
+        try:
+            await message.reply_audio(audio=output_file)
+        except BadRequest as e:
+            await message.reply_text(f"Failed to send audio: {e}")
 
-    # Cleanup intermediate files
+    except Exception as e:
+        await message.reply_text(f"An error occurred: {e}")
+
     os.remove(file_path)
     os.remove(output_file)
 
-    try:
-        await message.reply_audio(audio=final_output)
-    except BadRequest as e:
-        await message.reply_text(f"Failed to send audio: {e}")
-
-    os.remove(final_output)
-
-
-
-def apply_lofi_effect(audio_path, output_path, sample_rate=22050, bit_depth=8):
+def apply_lofi_effect(audio_path, output_path, sample_rate=22050, bit_depth=16):
     # Convert to WAV if needed
     if not audio_path.lower().endswith('.wav'):
         tmp_wav = "tmp.wav"
@@ -142,34 +135,37 @@ async def lofi_handler(client: Client, message: Message):
     input_file = file_path
     output_file = f"{os.path.splitext(file_path)[0]}_lofi.wav"
 
-    # Apply the lofi effect
-    apply_lofi_effect(input_file, output_file)
-
-    # Convert the output to FLAC with 24-bit depth and 48kHz sample rate
-    final_output = f"{os.path.splitext(file_path)[0]}_lofi_24bit_48kHz.flac"
-    sp.call(f'ffmpeg -hide_banner -loglevel error -y -i "{output_file}" -sample_fmt s32 -ar 48000 "{final_output}"', shell=True)
-    
-    # Add metadata to the final FLAC file
-    metadata_command = (
-        f'ffmpeg -hide_banner -loglevel error -y -i "{final_output}" '
-        f'-metadata comment="{metadata["comment"]}" '
-        f'-metadata created_by="{metadata["created_by"]}" '
-        f'-metadata title="{metadata["title"]}" '
-        f'"{final_output}"'
-    )
-    sp.call(metadata_command, shell=True)
-
-    # Cleanup intermediate files
-    os.remove(file_path)
-    os.remove(output_file)
-
     try:
-        await message.reply_audio(audio=final_output)
-    except BadRequest as e:
-        await message.reply_text(f"Failed to send audio: {e}")
+        # Apply the lofi effect
+        apply_lofi_effect(input_file, output_file)
 
-    os.remove(final_output)
+        # Convert the output to FLAC with 24-bit depth and 48kHz sample rate
+        final_output = f"{os.path.splitext(file_path)[0]}_lofi_24bit_48kHz.flac"
+        sp.call(f'ffmpeg -hide_banner -loglevel error -y -i "{output_file}" -sample_fmt s32 -ar 48000 "{final_output}"', shell=True)
+        
+        # Add metadata to the final FLAC file
+        metadata_command = (
+            f'ffmpeg -hide_banner -loglevel error -y -i "{final_output}" '
+            f'-metadata comment="{metadata["comment"]}" '
+            f'-metadata created_by="{metadata["created_by"]}" '
+            f'-metadata title="{metadata["title"]}" '
+            f'"{final_output}"'
+        )
+        sp.call(metadata_command, shell=True)
 
+        # Send the final output
+        try:
+            await message.reply_audio(audio=final_output)
+        except BadRequest as e:
+            await message.reply_text(f"Failed to send audio: {e}")
+
+        # Cleanup intermediate files
+        os.remove(file_path)
+        os.remove(output_file)
+        os.remove(final_output)
+        
+    except Exception as e:
+        await message.reply_text(f"An error occurred: {e}")
 
 @app.on_message(filters.command("setmetadata") & filters.private)
 async def set_metadata_handler(client: Client, message: Message):
@@ -195,6 +191,7 @@ async def set_metadata_handler(client: Client, message: Message):
         f"Created by: {created_by}\n"
         f"Title: {title}"
     )
+
     
 if __name__ == "__main__":
     app.run()
