@@ -23,7 +23,7 @@ metadata = {
 
 
 
-@Client.on_message(filters.command("setmetadata") & filters.private)
+@app.on_message(filters.command("setmetadata") & filters.private)
 async def set_metadata_command(client, msg):
     # Extract metadata from the command message
     if len(msg.command) < 2:
