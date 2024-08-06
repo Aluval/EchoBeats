@@ -1,8 +1,9 @@
 
+
+
 import os
 import numpy as np
 from pydub import AudioSegment
-from pydub.playback import play
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from pyrogram.errors import BadRequest
@@ -30,25 +31,29 @@ def apply_8d_effect(audio_path, output_path, pan_speed=0.1, rotation_duration=10
     num_samples = len(frames)
     num_frames = int(sample_rate * rotation_duration)
     
-    left_channel = np.zeros(num_samples)
-    right_channel = np.zeros(num_samples)
+    left_channel = np.zeros(num_samples, dtype=np.int16)
+    right_channel = np.zeros(num_samples, dtype=np.int16)
 
     # Apply panning effect
     for i in range(num_samples):
         pan = np.sin(2 * np.pi * i / num_frames)  # Generate a panning wave
-        left_channel[i] = frames[i] * (1 - pan)
-        right_channel[i] = frames[i] * pan
+        left_val = frames[i] * (1 - pan)
+        right_val = frames[i] * pan
+
+        # Ensure values are within valid int16 range
+        left_channel[i] = np.clip(left_val, -32768, 32767)
+        right_channel[i] = np.clip(right_val, -32768, 32767)
 
     # Create new audio segments for left and right channels
     left_audio = AudioSegment(
-        data=left_channel.astype(np.int16).tobytes(),
+        data=left_channel.tobytes(),
         sample_width=audio.sample_width,
         frame_rate=frame_rate,
         channels=1
     )
 
     right_audio = AudioSegment(
-        data=right_channel.astype(np.int16).tobytes(),
+        data=right_channel.tobytes(),
         sample_width=audio.sample_width,
         frame_rate=frame_rate,
         channels=1
