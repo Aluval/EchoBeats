@@ -189,7 +189,12 @@ async def set_metadata_handler(client: Client, message: Message):
     metadata["created_by"] = created_by
     metadata["title"] = title
 
-    await message.reply_text(f"Metadata updated:\nComment: {comment}\nCreated by: {created_by}\nTitle: {title}")
-
+    await message.reply_text(
+        f"Metadata updated:\n"
+        f"Comment: {comment}\n"
+        f"Created by: {created_by}\n"
+        f"Title: {title}"
+    )
+    
 if __name__ == "__main__":
     app.run()
