@@ -21,7 +21,9 @@ metadata = {
     "title": "Default title"
 }
 
-@app.on_message(filters.command("setmetadata") & filters.private)
+
+
+@Client.on_message(filters.command("setmetadata") & filters.private)
 async def set_metadata_command(client, msg):
     # Extract metadata from the command message
     if len(msg.command) < 2:
@@ -41,6 +43,8 @@ async def set_metadata_command(client, msg):
     await msg.reply_text("Metadata set successfully ✅.")
 
 def change_audio_metadata(input_path, output_path, comment, created_by, audio_title):
+    temp_output = f"{os.path.splitext(output_path)[0]}_temp.flac"
+    
     command = [
         'ffmpeg',
         '-i', input_path,
@@ -48,19 +52,22 @@ def change_audio_metadata(input_path, output_path, comment, created_by, audio_ti
         '-metadata', f'artist={created_by}',
         '-metadata', f'title={audio_title}',
         '-c', 'copy',
-        output_path,
+        temp_output,
         '-y'
     ]
-    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = process.communicate()
-    if process.returncode != 0:
-        raise Exception(f"FFmpeg error: {stderr.decode('utf-8')}")
+    
+    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    
+    if result.returncode != 0:
+        raise Exception(f"FFmpeg error: {result.stderr.decode('utf-8')}")
+    
+    os.rename(temp_output, output_path)
 
 def apply_slowreverb(audio_path, output_path, room_size=0.75, damping=0.5, wet_level=0.08, dry_level=0.2, slowfactor=0.08):
     # Convert to WAV if needed
     if not audio_path.lower().endswith('.wav'):
         tmp_wav = "tmp.wav"
-        subprocess.call(f'ffmpeg -hide_banner -loglevel error -y -i "{audio_path}" "{tmp_wav}"', shell=True)
+        subprocess.run(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-i', audio_path, tmp_wav])
         audio_path = tmp_wav
     
     # Load the audio file
@@ -78,11 +85,11 @@ def apply_slowreverb(audio_path, output_path, room_size=0.75, damping=0.5, wet_l
     slowed_audio.export(temp_file, format="wav")
 
     # Apply reverb using ffmpeg
-    reverb_command = (
-        f'ffmpeg -hide_banner -loglevel error -y -i "{temp_file}" '
-        f'-af "aecho={wet_level}:{damping}:{room_size}:{dry_level}" "{output_path}"'
-    )
-    subprocess.call(reverb_command, shell=True)
+    reverb_command = [
+        'ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-i', temp_file,
+        '-af', f"aecho={wet_level}:{damping}:{room_size}:{dry_level}", output_path
+    ]
+    subprocess.run(reverb_command)
 
     # Cleanup temporary files
     os.remove(temp_file)
@@ -108,7 +115,7 @@ async def slow_reverb_handler(client: Client, message: Message):
 
     # Convert the output to FLAC with 24-bit depth and 48kHz sample rate
     final_output = f"{os.path.splitext(file_path)[0]}_slowreverb_24bit_48kHz.flac"
-    subprocess.call(f'ffmpeg -hide_banner -loglevel error -y -i "{output_file}" -sample_fmt s32 -ar 48000 "{final_output}"', shell=True)
+    subprocess.run(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-i', output_file, '-sample_fmt', 's32', '-ar', '48000', final_output])
 
     # Add metadata to the final FLAC file
     change_audio_metadata(final_output, final_output, metadata["comment"], metadata["created_by"], metadata["title"])
@@ -123,7 +130,6 @@ async def slow_reverb_handler(client: Client, message: Message):
         await message.reply_text(f"Failed to send audio: {e}")
     
     os.remove(final_output)
-
     
 if __name__ == "__main__":
     app.run()
