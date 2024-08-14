@@ -1,5 +1,5 @@
 # MusicConverter24Bot
 
-# Maintenance Mode Dont Fork
+# Maintenance Mode Don't Fork
 
 **warning ⚠️ 
