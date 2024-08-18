@@ -8,10 +8,22 @@ from pyrogram.types import Message
 from pyrogram.errors import BadRequest
 import subprocess 
 
-# Initialize the bot with your credentials
+import re
+import random
+import shutil
+import base64
+import requests
+import wget
+
+# Configurations (Ideally loaded from environment variables or config file)
 api_id = '10811400'
 api_hash = '191bf5ae7a6c39771e7b13cf4ffd1279'
 bot_token = '7412278588:AAHmk19iP3uK79OglBISjicbl70TD6i9wEc'
+SPOTIFY_CLIENT_ID = '8a9eab1a1a2948fbaa582389e1ae565b'
+SPOTIFY_CLIENT_SECRET = 'e20f2cc4202146c3aa62ccf7ed83f80d'
+
+credentials = base64.b64encode(f'{SPOTIFY_CLIENT_ID}:{SPOTIFY_CLIENT_SECRET}'.encode('utf-8')).decode('utf-8')
+
 
 app = Client("slowreverb_bot", api_id=api_id, api_hash=api_hash, bot_token=bot_token)
 
@@ -240,20 +252,6 @@ async def eight_d_handler(client: Client, message: Message):
     os.remove(final_output)
 
 
-import os
-import re
-import random
-import shutil
-import base64
-import requests
-import wget
-from pyrogram import Client, filters
-
-# Configurations (Ideally loaded from environment variables or config file)
-SPOTIFY_CLIENT_ID = 'your_client_id'
-SPOTIFY_CLIENT_SECRET = 'your_client_secret'
-
-credentials = base64.b64encode(f'{SPOTIFY_CLIENT_ID}:{SPOTIFY_CLIENT_SECRET}'.encode('utf-8')).decode('utf-8')
 
 def get_access_token():
     url = 'https://accounts.spotify.com/api/token'
@@ -293,7 +291,7 @@ async def fetch_track_info(song_name_or_url, access_token):
     except requests.RequestException as e:
         raise Exception(f"Failed to fetch track info: {e}")
 
-@Client.on_message(filters.regex(r'https://open\.spotify\.com/track/([a-zA-Z0-9]+)'))
+@app.on_message(filters.regex(r'https://open\.spotify\.com/track/([a-zA-Z0-9]+)'))
 async def spotify(client, message):
     try:
         access_token = get_access_token()
