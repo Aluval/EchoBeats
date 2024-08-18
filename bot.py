@@ -254,7 +254,7 @@ from pyrogram.errors import BadRequest
 # Initialize the bot with your credentials
 api_id = '10811400'
 api_hash = '191bf5ae7a6c39771e7b13cf4ffd1279'
-bot_token = '7412278588:AAFKWhBga4p9sqXT9OcaYt41nQz14IVmQyA'
+bot_token = '7412278588:AAHmk19iP3uK79OglBISjicbl70TD6i9wEc'
 
 app = Client("music_converter_bot", api_id=api_id, api_hash=api_hash, bot_token=bot_token)
 
