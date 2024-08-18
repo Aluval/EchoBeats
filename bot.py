@@ -14,6 +14,7 @@ import shutil
 import base64
 import requests
 import wget
+from yt_dlp import YoutubeDL
 
 # Configurations (Ideally loaded from environment variables or config file)
 api_id = '10811400'
@@ -252,6 +253,34 @@ async def eight_d_handler(client: Client, message: Message):
     os.remove(final_output)
 
 
+async def download_songs(music, download_directory="."):
+  query = f"{music}".replace("+", "")
+  ydl_opts = {
+      "format": "bestaudio/best",
+      "default_search": "ytsearch",
+      "noplaylist": True,
+      "nocheckcertificate": True,
+      "outtmpl": f"{music}.mp3",
+      "quiet": True,
+      "addmetadata": True,
+      "prefer_ffmpeg": True,
+      "geo_bypass": True,
+      "nocheckcertificate": True,
+  }
+
+  with YoutubeDL(ydl_opts) as ydl:
+      try:
+          video = ydl.extract_info(f"ytsearch:{music}", download=False)["entries"][0]["id"]
+          info = ydl.extract_info(video)
+          filename = ydl.prepare_filename(info)
+          if not filename:
+              print(f"Track Not Found⚠️")
+          else:
+              path_link = filename
+              return path_link, info 
+      except Exception as e:
+          raise Exception(f"Error downloading song: {e}") 
+          
 
 def get_access_token():
     url = 'https://accounts.spotify.com/api/token'
