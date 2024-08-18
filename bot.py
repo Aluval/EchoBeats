@@ -238,6 +238,41 @@ async def eight_d_handler(client: Client, message: Message):
     os.remove(file_path)
     os.remove(output_file)
     os.remove(final_output)
+
+
+from pyrogram import Client, filters
+import requests
+from bs4 import BeautifulSoup
+
+
+
+@app.on_message(filters.command("search"))
+async def search_command(client, message):
+    # Extract search query from the message text
+    query = message.text.split(" ", 1)[1]
+    search_url = f"https://www.naasongs.co/?s={query}"
+
+    # Fetch the search results page
+    response = requests.get(search_url)
+    soup = BeautifulSoup(response.text, "html.parser")
+    
+    # Extract search results (adjust based on the site's structure)
+    results = soup.find_all("div", {"class": "search-result"})
+    
+    if not results:
+        await message.reply("No results found.")
+        return
+
+    # Format the search results
+    result_messages = []
+    for result in results:
+        title = result.find("h2").text
+        link = result.find("a")["href"]
+        result_messages.append(f"{title}: {link}")
+
+    # Send the results to the user
+    await message.reply("\n".join(result_messages))
+
     
 if __name__ == "__main__":
     app.run()
