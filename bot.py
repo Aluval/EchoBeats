@@ -240,39 +240,90 @@ async def eight_d_handler(client: Client, message: Message):
     os.remove(final_output)
 
 
-from pyrogram import Client, filters
+import os
+import re
+import random
+import shutil
+import base64
 import requests
-from bs4 import BeautifulSoup
+import wget
+from pyrogram import Client, filters
 
+# Configurations (Ideally loaded from environment variables or config file)
+SPOTIFY_CLIENT_ID = 'your_client_id'
+SPOTIFY_CLIENT_SECRET = 'your_client_secret'
 
+credentials = base64.b64encode(f'{SPOTIFY_CLIENT_ID}:{SPOTIFY_CLIENT_SECRET}'.encode('utf-8')).decode('utf-8')
 
-@app.on_message(filters.command("search"))
-async def search_command(client, message):
-    # Extract search query from the message text
-    query = message.text.split(" ", 1)[1]
-    search_url = f"https://www.naasongs.co/?s={query}"
+def get_access_token():
+    url = 'https://accounts.spotify.com/api/token'
+    headers = {
+        'Authorization': f'Basic {credentials}',
+        'Content-Type': 'application/x-www-form-urlencoded'
+    }
+    data = {
+        'grant_type': 'client_credentials'
+    }
+    try:
+        response = requests.post(url, headers=headers, data=data)
+        response.raise_for_status()
+        return response.json().get('access_token')
+    except requests.RequestException as e:
+        raise Exception(f"Failed to get access token: {e}")
 
-    # Fetch the search results page
-    response = requests.get(search_url)
-    soup = BeautifulSoup(response.text, "html.parser")
+async def fetch_track_info(song_name_or_url, access_token):
+    if re.match(r'https://open\.spotify\.com/track/([a-zA-Z0-9]+)', song_name_or_url):
+        song_id = re.match(r'https://open\.spotify\.com/track/([a-zA-Z0-9]+)', song_name_or_url).group(1)
+    else:
+        search_url = f'https://api.spotify.com/v1/search?q={song_name_or_url}&type=track'
+        search_headers = {"Authorization": f"Bearer {access_token}"}
+        try:
+            search_response = requests.get(search_url, headers=search_headers)
+            search_response.raise_for_status()
+            search_data = search_response.json()
+            song_id = search_data["tracks"]["items"][0]["id"]
+        except requests.RequestException as e:
+            raise Exception(f"Failed to search for track: {e}")
+
+    track_url = f'https://api.spotify.com/v1/tracks/{song_id}'
+    try:
+        track_response = requests.get(track_url, headers={"Authorization": f"Bearer {access_token}"})
+        track_response.raise_for_status()
+        return track_response.json()
+    except requests.RequestException as e:
+        raise Exception(f"Failed to fetch track info: {e}")
+
+@Client.on_message(filters.regex(r'https://open\.spotify\.com/track/([a-zA-Z0-9]+)'))
+async def spotify(client, message):
+    try:
+        access_token = get_access_token()
+        track_info = await fetch_track_info(message.text, access_token)
+        
+        thumbnail_url = track_info["album"]["images"][0]["url"]
+        artist = track_info["artists"][0]["name"]
+        name = track_info["name"]
+        album = track_info["album"]["name"]
+        release_date = track_info["album"]["release_date"]
+
+        music = f"{name} {album}"
+        thumbnail = wget.download(thumbnail_url)
+
+        randomdir = f"/tmp/{random.randint(1, 100000000)}"
+        os.makedirs(randomdir)
+        path, info = await download_songs(music, randomdir)
+        
+        await message.reply_photo(photo=thumbnail_url, caption=f"🎧 Title: <code>{name}</code>\n🎼 Artist: <code>{artist}</code>\n🎤 Album: <code>{album}</code>\n🗓️ Release Date: <code>{release_date}</code>\n")
+        
+        await message.reply_audio(
+            path,
+            thumb=thumbnail
+        )
+        
+        shutil.rmtree(randomdir)
+        os.remove(thumbnail)
     
-    # Extract search results (adjust based on the site's structure)
-    results = soup.find_all("div", {"class": "search-result"})
-    
-    if not results:
-        await message.reply("No results found.")
-        return
-
-    # Format the search results
-    result_messages = []
-    for result in results:
-        title = result.find("h2").text
-        link = result.find("a")["href"]
-        result_messages.append(f"{title}: {link}")
-
-    # Send the results to the user
-    await message.reply("\n".join(result_messages))
-
+    except Exception as e:
+        await message.reply_text(f"Error: {e}")
     
 if __name__ == "__main__":
     app.run()
