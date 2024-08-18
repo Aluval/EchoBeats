@@ -326,28 +326,23 @@ async def spotify(client, message):
         access_token = get_access_token()
         track_info = await fetch_track_info(message.text, access_token)
         
-        thumbnail_url = track_info["album"]["images"][0]["url"]
         artist = track_info["artists"][0]["name"]
         name = track_info["name"]
         album = track_info["album"]["name"]
-        release_date = track_info["album"]["release_date"]
-
+        
         music = f"{name} {album}"
-        thumbnail = wget.download(thumbnail_url)
-
+        
         randomdir = f"/tmp/{random.randint(1, 100000000)}"
         os.makedirs(randomdir)
         path, info = await download_songs(music, randomdir)
         
-        await message.reply_photo(photo=thumbnail_url, caption=f"🎧 Title: <code>{name}</code>\n🎼 Artist: <code>{artist}</code>\n🎤 Album: <code>{album}</code>\n🗓️ Release Date: <code>{release_date}</code>\n")
-        
+        # Sending only the audio file
         await message.reply_audio(
             path,
-            thumb=thumbnail
+            caption=f"🎧 Title: <code>{name}</code>\n🎼 Artist: <code>{artist}</code>\n🎤 Album: <code>{album}</code>"
         )
         
         shutil.rmtree(randomdir)
-        os.remove(thumbnail)
     
     except Exception as e:
         await message.reply_text(f"Error: {e}")
