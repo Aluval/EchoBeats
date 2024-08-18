@@ -1,9 +1,10 @@
-pydub==0.25.1
+pydub
 numpy==1.24.0
 pyrogram==2.0.106
 tgcrypto==1.2.4
 requests
 random
 shutil
-base64
+bs4==0.0.1
 wget
+spotipy
