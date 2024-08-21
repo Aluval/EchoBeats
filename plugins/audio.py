@@ -13,6 +13,7 @@ import wget
 from yt_dlp import YoutubeDL
 from helper.ffmpeg import change_audio_metadata, run_ffmpeg_command
 from helper.utils import apply_slowreverb, apply_lofi_effect, apply_8d_effect, get_access_token, download_songs
+from helper.database import db
 
 # /slowreverb command handler
 @Client.on_message(filters.command("slowreverb") & filters.private)
