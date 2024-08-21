@@ -15,7 +15,7 @@ FSUB_GROUP = os.environ.get("FSUB_GROUP", "Sunrises24BotSupport")
 DATABASE_URI = os.environ.get("DATABASE_URI", "mongodb+srv://UPLOADXPRO24BOT:UPLOADXPRO24BOT@cluster0.hjfk60f.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
 DATABASE_NAME = os.environ.get("DATABASE_NAME", "Cluster0")
 #ALL FILES UPLOADED - CREDITS 🌟 - @Sunrises_24
-SUNRISES_PIC= "https://graph.org/file/bd91761f6e938e2e6d23a.jpg"  # Replace with your Telegraph link
+SUNRISES_PIC= "https://graph.org/file/84746173290bb9d0d8a28.jpg"  # Replace with your Telegraph link
 WEBHOOK = bool(os.environ.get("WEBHOOK", True))
 PORT = int(os.environ.get("PORT", "8081"))
 SPOTIFY_CLIENT_ID = os.environ.get("SPOTIFY_CLIENT_ID", "8a9eab1a1a2948fbaa582389e1ae565b")
