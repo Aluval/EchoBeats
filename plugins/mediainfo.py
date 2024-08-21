@@ -10,27 +10,27 @@ telegraph.create_api_token("MediaInfoBot")
 
 @Client.on_message(filters.command("mediainfo") & filters.private)
 async def mediainfo_handler(client: Client, message: Message):
-    if not message.reply_to_message or (not message.reply_to_message.document and not message.reply_to_message.video):
-        await message.reply_text("Please reply to a document or video to get media info.")
+    if not message.reply_to_message or not message.reply_to_message.audio:
+        await message.reply_text("Please reply to an audio file to get MediaInfo.")
         return
 
     reply = message.reply_to_message
-    media = reply.document or reply.video or reply.audio
+    audio = reply.audio
 
     # Send an acknowledgment message immediately
     processing_message = await message.reply_text("Getting MediaInfo...")
 
     try:
-        # Download the media file to a local location
-        if media:
-            file_path = await client.download_media(media)
+        # Download the audio file to a local location
+        if audio:
+            file_path = await client.download_media(audio)
         else:
-            raise ValueError("No valid media found in the replied message.")
+            raise ValueError("No valid audio file found in the replied message.")
 
         # Get media info
         media_info_html = get_mediainfo(file_path)
 
-        # Remove date from the media info
+        # Customize the media info output
         media_info_html = (
             f"<strong>SUNRISES 24 BOT UPDATES</strong><br>"
             f"<strong>MediaInfo X</strong><br>"
@@ -39,14 +39,14 @@ async def mediainfo_handler(client: Client, message: Message):
         )
 
         # Save the media info to an HTML file
-        html_file_path = f"media_info_{media.file_id}.html"
+        html_file_path = f"media_info_{audio.file_id}.html"
         with open(html_file_path, "w") as file:
             file.write(media_info_html)
 
         # Store media info in MongoDB
         media_info_data = {
             'media_info': media_info_html,
-            'media_id': media.file_id
+            'media_id': audio.file_id
         }
         media_info_id = await db.store_media_info_in_db(media_info_data)
 
@@ -64,7 +64,7 @@ async def mediainfo_handler(client: Client, message: Message):
             f"SUNRISES 24 BOT UPDATES\n"
             f"MediaInfo X\n\n"
             f"[View Info on Telegraph]({link})\n"
-            f"Rights designed by Sᴜɴʀɪsᴇs Hᴀʀsʜᴀ 𝟸𝟺 🇮🇳 ᵀᴱᴸ"
+            f"Rights Designed By Sᴜɴʀɪsᴇs Hᴀʀsʜᴀ 𝟸𝟺 🇮🇳 ᵀᴱᴸ"
         )
 
         # Send HTML file and Telegraph link
