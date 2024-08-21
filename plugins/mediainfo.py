@@ -2,7 +2,7 @@ from pyrogram.types import Message
 from pyrogram import Client, filters
 from helper.database import db
 from html_telegraph_poster import TelegraphPoster
-from helper.ffmpeg import get_mediainfo
+from helper.utils import get_mediainfo
 
 # Initialize Telegraph
 telegraph = TelegraphPoster(use_api=True)
