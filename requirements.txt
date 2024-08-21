@@ -6,4 +6,5 @@ requests
 bs4==0.0.1
 wget
 yt-dlp
-
+pymongo
+motor
