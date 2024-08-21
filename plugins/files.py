@@ -64,7 +64,7 @@ async def count_users(bot, msg):
     except Exception as e:
         await msg.reply_text(f"An error occurred: {e}")
 
-@Client.on_message(filters.command("stats") & filters.chat(GROUP))        
+@Client.on_message(filters.command("stats") & filters.private)        
 async def stats_command(_, msg):
     uptime = datetime.datetime.now() - START_TIME
     uptime_str = str(timedelta(seconds=int(uptime.total_seconds())))
