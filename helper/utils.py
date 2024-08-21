@@ -5,6 +5,7 @@ from yt_dlp import YoutubeDL
 from config import *
 import base64
 import requests
+import subprocess 
 
 credentials = base64.b64encode(f'{SPOTIFY_CLIENT_ID}:{SPOTIFY_CLIENT_SECRET}'.encode('utf-8')).decode('utf-8')
 
@@ -109,3 +110,15 @@ def get_access_token():
         return response.json().get('access_token')
     except requests.RequestException as e:
         raise Exception(f"Failed to get access token: {e}")
+
+# Function to extract media information using mediainfo command
+def get_mediainfo(file_path):
+    process = subprocess.Popen(
+        ["mediainfo", file_path, "--Output=HTML"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    stdout, stderr = process.communicate()
+    if process.returncode != 0:
+        raise Exception(f"Error getting media info: {stderr.decode().strip()}")
+    return stdout.decode().strip()
