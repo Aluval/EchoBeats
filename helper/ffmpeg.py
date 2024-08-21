@@ -1,3 +1,7 @@
+import os
+import subprocess 
+
+
 # Helper function to run ffmpeg commands
 def run_ffmpeg_command(command):
     result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
