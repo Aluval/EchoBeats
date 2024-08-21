@@ -1,6 +1,6 @@
 import motor.motor_asyncio
 from pymongo import ReturnDocument
-
+from config import DATABASE_URI, DATABASE_NAME
 # Initialize your database connection
 class Database:
     def __init__(self, uri, database_name):
