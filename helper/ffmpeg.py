@@ -19,6 +19,7 @@ def change_audio_metadata(input_path, output_path, comment, created_by, audio_ti
         '-metadata', f'comment={comment}',
         '-metadata', f'created_by={created_by}',
         '-metadata', f'title={audio_title}',
+        '-metadata:s:a', f'title={audio_title}',
         '-c', 'copy',
         temp_output,
         '-y'
