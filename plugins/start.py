@@ -10,11 +10,14 @@ from pymongo.errors import PyMongoError
 
 
 START_TEXT = """
-Hᴇʟʟᴏ Mᴀᴡа❤️! I ᴀᴍ ᴛʜᴇ Aᴅᴠᴀɴᴄᴇᴅ 𝟸𝟺 Bᴏᴛ ⚡
+Hᴇʟʟᴏ Mᴀᴡᴀ❤️! I ᴀᴍ ᴛʜᴇ EᴄʜᴏBᴇᴀᴛs𝟸𝟺Bᴏᴛ ⚡
 
-Mᴀᴅᴇ ʙʏ <b><a href=https://t.me/Sunrises24botupdates>SUNRISES ™💥</a></b> ᴀɴᴅ <b><a href=https://t.me/Sunrises_24>Sᴜɴʀɪꜱᴇꜱ Hᴀʀꜱʜᴀ 𝟸𝟺❤️</a></b>.
+• Lᴏғɪ Vɪʙᴇs: Cʜɪʟʟ ᴡɪᴛʜ ᴄᴜsᴛᴏᴍ ʟᴏғɪ ʙᴇᴀᴛs.
+• Eᴄʜᴏᴇᴅ Bᴇᴀᴛs: Exᴘᴇʀɪᴇɴᴄᴇ sʟᴏᴡ ʀᴇᴠᴇʀʙ-ᴇɴʜᴀɴᴄᴇᴅ ᴛʀᴀᴄᴋs.
+• Iᴍᴍᴇʀsɪᴠᴇ Sᴏᴜɴᴅ: Dɪᴠᴇ ɪɴᴛᴏ ᴛʜᴇ ᴡᴏʀʟᴅ ᴏғ 𝟾D ᴀᴜᴅɪᴏ.
 
-#SUNRISES24BOTS 
+#SUNRISES24BOTS
+#EchoBeats24Bot
 """
 
 #ALL FILES UPLOADED - CREDITS 🌟 - @Sunrises_24
@@ -145,4 +148,18 @@ async def help(bot, msg):
         InlineKeyboardButton("Cʟᴏꜱᴇ ❌", callback_data="del")   
     ]] 
     await msg.message.edit(text=txt, reply_markup=InlineKeyboardMarkup(button), disable_web_page_preview = True)
- 
+
+#ALL FILES UPLOADED - CREDITS 🌟 - @Sunrises_24
+#FUNCTION CALL BACK ABOUT
+@Client.on_callback_query(filters.regex("about"))
+async def about(bot, msg):
+    me=await bot.get_me()
+    Dᴇᴠᴇʟᴏᴘᴇʀ ="<a href=https://t.me/Sunrises_24>SUNRISES™🧑🏻‍💻</a>"     
+    txt="<b>Uᴘᴅᴀᴛᴇs 📢: <a href=https://t.me/Sunrises24botupdates>SUNRISES™</a></b>"
+    txt="<b>Sᴜᴘᴘᴏʀᴛ ✨: <a href=https://t.me/Sunrises24botSupport>SUNRISES⚡™</a></b>"
+    txt="<b>✯ Bᴜɪʟᴅ Sᴛᴀᴛᴜs 📊 : ᴠ2.4 [Sᴛᴀʙʟᴇ]</b>" 
+    button= [[        
+        InlineKeyboardButton("Cʟᴏꜱᴇ ❌", callback_data="del")       
+    ]]  
+    await msg.message.edit(text=txt, reply_markup=InlineKeyboardMarkup(button), disable_web_page_preview = True, parse_mode=enums.ParseMode.HTML)
+    
