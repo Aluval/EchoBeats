@@ -4,7 +4,7 @@ from pyrogram import Client, filters, enums
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 from pyrogram.errors import UserNotParticipant, UserBannedInChannel
 from config import *
-from Database.database import db
+from helper.database import db
 from pymongo.errors import PyMongoError
 
 
