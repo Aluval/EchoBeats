@@ -4,6 +4,8 @@ from helper.ffmpeg import run_ffmpeg_command
 from yt_dlp import YoutubeDL
 from config import *
 import base64
+import requests
+
 credentials = base64.b64encode(f'{SPOTIFY_CLIENT_ID}:{SPOTIFY_CLIENT_SECRET}'.encode('utf-8')).decode('utf-8')
 
 # Apply Slow Reverb effect function
