@@ -172,3 +172,34 @@ async def fetch_track_info(song_name_or_url, access_token):
         raise Exception(f"Failed to fetch track info: {e}")
 
 
+@Client.on_message(filters.regex(r'https://open\.spotify\.com/track/([a-zA-Z0-9]+)'))
+async def spotify(client, message):
+    try:
+        access_token = get_access_token()
+        track_info = await fetch_track_info(message.text, access_token)
+
+        thumbnail_url = track_info["album"]["images"][0]["url"]
+        artist = track_info["artists"][0]["name"]
+        name = track_info["name"]
+        album = track_info["album"]["name"]
+        release_date = track_info["album"]["release_date"]
+
+        music = f"{name} {album}"
+        thumbnail = wget.download(thumbnail_url)
+
+        randomdir = f"/tmp/{random.randint(1, 100000000)}"
+        os.makedirs(randomdir)
+        path, info = await download_songs(music, randomdir)
+
+        # Send the audio file with the thumbnail and caption
+        await message.reply_audio(
+            path,
+            thumb=thumbnail,
+            caption=f"🎧 Title: <code>{name}</code>\n🎼 Artist: <code>{artist}</code>\n🎤 Album: <code>{album}</code>\n🗓️ Release Date: <code>{release_date}</code>"
+        )
+
+        shutil.rmtree(randomdir)
+        os.remove(thumbnail)
+
+    except Exception as e:
+        await message.reply_text(f"Error: {e}")
