@@ -3,6 +3,8 @@ import ffmepg
 from pydub import AudioSegment
 from helper.ffmepg import run_ffmpeg_command
 from yt_dlp import YoutubeDL
+from config import *
+credentials = base64.b64encode(f'{SPOTIFY_CLIENT_ID}:{SPOTIFY_CLIENT_SECRET}'.encode('utf-8')).decode('utf-8')
 
 # Apply Slow Reverb effect function
 def apply_slowreverb(audio_path, output_path, room_size=0.75, damping=0.5, wet_level=0.08, dry_level=0.2, slowfactor=0.08):
