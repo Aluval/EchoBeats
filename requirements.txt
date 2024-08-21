@@ -8,3 +8,10 @@ wget
 yt-dlp
 pymongo
 motor
+html_telegraph_poster
+lxml_html_clean
+motor
+pymongo
+datetime
+psutil
+
