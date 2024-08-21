@@ -1,6 +1,6 @@
 import psutil
 import asyncio
-import datetime
+import datetime, time
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from config import ADMIN
@@ -179,19 +179,6 @@ async def broadcast(bot, msg: Message):
     await msg.reply_text(f"Broadcast completed: {sent_count} sent, {failed_count} failed.")
     await msg.reply_document('broadcast_log.txt')
   
-#ALL FILES UPLOADED - CREDITS 🌟 - @Sunrises_24
-#FUNCTION CALL BACK ABOUT
-@Client.on_callback_query(filters.regex("about"))
-async def about(bot, msg):
-    me=await bot.get_me()
-    Dᴇᴠᴇʟᴏᴘᴇʀ ="<a href=https://t.me/Sunrises_24>SUNRISES™🧑🏻‍💻</a>"     
-    txt="<b>Uᴘᴅᴀᴛᴇs 📢: <a href=https://t.me/Sunrises24botupdates>SUNRISES™</a></b>"
-    txt="<b>Sᴜᴘᴘᴏʀᴛ ✨: <a href=https://t.me/Sunrises24botSupport>SUNRISES⚡™</a></b>"
-    txt="<b>✯ Bᴜɪʟᴅ Sᴛᴀᴛᴜs 📊 : ᴠ2.4 [Sᴛᴀʙʟᴇ]</b>" 
-    button= [[        
-        InlineKeyboardButton("Cʟᴏꜱᴇ ❌", callback_data="del")       
-    ]]  
-    await msg.message.edit(text=txt, reply_markup=InlineKeyboardMarkup(button), disable_web_page_preview = True, parse_mode=enums.ParseMode.HTML)
 
 #ALL FILES UPLOADED - CREDITS 🌟 - @Sunrises_24
 @Client.on_callback_query(filters.regex("del"))
@@ -205,7 +192,7 @@ async def closed(bot, msg):
 @Client.on_message(filters.command("about"))
 async def about_command(bot, msg):
     about_text = """
-<b>✯ Mʏ Nᴀᴍᴇ : <a href=https://t.me/MetaMorpher24Bot>𝐌𝐞𝐭𝐚𝐌𝐨𝐫𝐩𝐡𝐞𝐫 🌟</a></b>
+<b>✯ Mʏ Nᴀᴍᴇ : <a href=https://t.me/MetaMorpher24Bot>𝐄𝐜𝐡𝐨𝐁𝐞𝐚𝐭𝐬𝟐𝟒𝐁𝐨𝐭 🎧</a></b>
 <b>✯ Dᴇᴠᴇʟᴏᴘᴇʀ 🧑🏻‍💻 : <a href=https://t.me/Sunrises_24>𝐒𝐔𝐍𝐑𝐈𝐒𝐄𝐒™ ⚡</a></b>
 <b>✯ Uᴘᴅᴀᴛᴇs 📢 : <a href=https://t.me/Sunrises24BotUpdates>𝐔𝐏𝐃𝐀𝐓𝐄𝐒 📢</a></b>
 <b>✯ Sᴜᴘᴘᴏʀᴛ ✨ : <a href=https://t.me/Sunrises24BotUpdates>𝐒𝐔𝐏𝐏𝐎𝐑𝐓 ✨</a></b>
