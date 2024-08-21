@@ -12,10 +12,10 @@ import requests
 import wget
 from yt_dlp import YoutubeDL
 from helper.ffmpeg import change_audio_metadata, run_ffmpeg_command
-from helper.utils import apply_slowreverb, apply_lofi_effect, apply_8d_effect
+from helper.utils import apply_slowreverb, apply_lofi_effect, apply_8d_effect, get_access_token, download_songs
 
 # /slowreverb command handler
-@app.on_message(filters.command("slowreverb") & filters.private)
+@Client.on_message(filters.command("slowreverb") & filters.private)
 async def slow_reverb_handler(client: Client, message: Message):
     user_id = message.from_user.id
     
@@ -58,7 +58,7 @@ async def slow_reverb_handler(client: Client, message: Message):
     os.remove(final_output)
 
 # /lofi command handler
-@app.on_message(filters.command("lofi") & filters.private)
+@Client.on_message(filters.command("lofi") & filters.private)
 async def lofi_handler(client: Client, message: Message):
     user_id = message.from_user.id
     
@@ -99,7 +99,7 @@ async def lofi_handler(client: Client, message: Message):
     os.remove(final_output)
     
 # /8d command handler
-@app.on_message(filters.command("8d") & filters.private)
+@Client.on_message(filters.command("8d") & filters.private)
 async def eight_d_handler(client: Client, message: Message):
     user_id = message.from_user.id
     
@@ -149,30 +149,26 @@ async def eight_d_handler(client: Client, message: Message):
     os.remove(final_output)
 
 
+async def fetch_track_info(song_name_or_url, access_token):
+    if re.match(r'https://open\.spotify\.com/track/([a-zA-Z0-9]+)', song_name_or_url):
+        song_id = re.match(r'https://open\.spotify\.com/track/([a-zA-Z0-9]+)', song_name_or_url).group(1)
+    else:
+        search_url = f'https://api.spotify.com/v1/search?q={song_name_or_url}&type=track'
+        search_headers = {"Authorization": f"Bearer {access_token}"}
+        try:
+            search_response = requests.get(search_url, headers=search_headers)
+            search_response.raise_for_status()
+            search_data = search_response.json()
+            song_id = search_data["tracks"]["items"][0]["id"]
+        except requests.RequestException as e:
+            raise Exception(f"Failed to search for track: {e}")
+
+    track_url = f'https://api.spotify.com/v1/tracks/{song_id}'
+    try:
+        track_response = requests.get(track_url, headers={"Authorization": f"Bearer {access_token}"})
+        track_response.raise_for_status()
+        return track_response.json()
+    except requests.RequestException as e:
+        raise Exception(f"Failed to fetch track info: {e}")
 
 
-
-@app.on_message(filters.command("setmetadata") & filters.private)
-async def set_metadata_command(client: Client, msg: Message):
-    user_id = msg.from_user.id
-    
-    # Extract metadata from the command message
-    if len(msg.command) < 2:
-        await msg.reply_text("Invalid command format. Use: /setmetadata comment | created_by | title")
-        return
-    
-    parts = msg.text.split(" ", 1)[1].split(" | ")
-    if len(parts) != 3:
-        await msg.reply_text("Invalid number of metadata parts. Use: /setmetadata comment | created_by | title")
-        return
-    
-    metadata = {
-        "comment": parts[0].strip(),
-        "created_by": parts[1].strip(),
-        "title": parts[2].strip()
-    }
-    
-    # Store the metadata in the database
-    await db.set_user_metadata(user_id, metadata)
-    
-    await msg.reply_text("Metadata set successfully ✅.")
