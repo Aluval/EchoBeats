@@ -7,7 +7,6 @@ from pyrogram.errors import BadRequest
 import subprocess 
 import random
 import shutil
-import base64
 import requests
 import wget
 from yt_dlp import YoutubeDL
