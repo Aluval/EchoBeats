@@ -1,5 +1,4 @@
 import os, re
-import ffmepg
 from pydub import AudioSegment
 from helper.ffmepg import run_ffmpeg_command
 from yt_dlp import YoutubeDL
