@@ -1,6 +1,6 @@
 import os, re
 from pydub import AudioSegment
-from helper.ffmepg import run_ffmpeg_command
+from helper.ffmpeg import run_ffmpeg_command
 from yt_dlp import YoutubeDL
 from config import *
 credentials = base64.b64encode(f'{SPOTIFY_CLIENT_ID}:{SPOTIFY_CLIENT_SECRET}'.encode('utf-8')).decode('utf-8')
