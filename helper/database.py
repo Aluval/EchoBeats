@@ -1,9 +1,4 @@
 import motor.motor_asyncio
-from pyrogram import Client, filters
-from pydub import AudioSegment
-from pyrogram.types import Message
-import os
-import subprocess
 from pymongo import ReturnDocument
 
 # Initialize your database connection
@@ -25,4 +20,5 @@ class Database:
             return_document=ReturnDocument.AFTER
         )
 
-db = Database("mongodb_uri", "database_name")
+# Initialize the database instance
+db = Database(DATABASE_URI, DATABASE_NAME)    
