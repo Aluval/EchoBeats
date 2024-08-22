@@ -66,6 +66,7 @@ def apply_8d_effect(audio_path, output_path):
     if audio_path == "tmp.wav":
         os.remove(audio_path)
 
+"""
 async def download_songs(music, download_directory="."):
   query = f"{music}".replace("+", "")
   ydl_opts = {
@@ -93,7 +94,42 @@ async def download_songs(music, download_directory="."):
               return path_link, info 
       except Exception as e:
           raise Exception(f"Error downloading song: {e}") 
-          
+"""
+async def download_songs(music, download_directory="."):
+    query = f"{music}".replace("+", "")
+    # Assuming cookies.txt is in the root of the repository
+    cookies_path = os.path.join(os.getcwd(), 'cookies.txt')
+    
+    ydl_opts = {
+        "format": "bestaudio/best",
+        "default_search": "ytsearch",
+        "noplaylist": True,
+        "nocheckcertificate": True,
+        "outtmpl": f"{download_directory}/{music}.mp3",
+        "quiet": True,
+        "addmetadata": True,
+        "prefer_ffmpeg": True,
+        "geo_bypass": True,
+        "cookiefile": cookies_path,  # Path to cookies.txt
+    }
+
+    with YoutubeDL(ydl_opts) as ydl:
+        try:
+            # Search for the video and extract information
+            search_result = ydl.extract_info(f"ytsearch:{music}", download=False)
+            video_id = search_result["entries"][0]["id"]
+            info = ydl.extract_info(video_id)
+            filename = ydl.prepare_filename(info)
+            
+            if not filename:
+                print("Track Not Found⚠️")
+            else:
+                return filename, info
+        
+        except Exception as e:
+            raise Exception(f"Error downloading song: {e}")
+
+
 
 def get_access_token():
     url = 'https://accounts.spotify.com/api/token'
