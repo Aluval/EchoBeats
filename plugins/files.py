@@ -239,6 +239,29 @@ Hᴇʀᴇ Is Tʜᴇ Hᴇʟᴘ Fᴏʀ Mʏ Cᴏᴍᴍᴀɴᴅs.
    """
     await msg.reply_text(help_text)
     
+@Client.on_message(filters.command("privacy"))
+async def privacy_command(bot, msg):
+    help_text = """
+    <b>**Privacy Policy📄**
+
+• **Online Privacy Policy Only** :
+This Privacy Policy applies solely to our online activities and is valid for visitors to our website/bots regarding the information that they share and/or collect in our services. This policy does not apply to any information collected offline or via channels other than this website.
+
+• **User Data** :
+We only collect general user data necessary for the service itself, such as Telegram User ID.
+
+• **Consent** :
+By using our services, you consent to our Privacy Policy and agree to its Terms and Conditions. All services provided are for educational purposes only, and we do not take responsibility for user activity.
+
+• **Bot Functionality** :
+This bot is designed for converting audio into formats like slow reverb, lofi, and 8D.
+
+• **Contact Information**:
+    If you have any questions or concerns about Bot or this Privacy Policy, please contact us at @Sunrises24Bot
+   """
+    await msg.reply_text(help_text)
+    
+
 
 #ALL FILES UPLOADED - CREDITS 🌟 - @Sunrises_24
 #Ping
