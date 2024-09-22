@@ -15,4 +15,5 @@ pymongo
 datetime
 psutil
 aiohttp
+ffmpeg
 
